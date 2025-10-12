@@ -55,6 +55,18 @@ app.use(errorHandler);
 const server = http.createServer(app);
 initWebsocket(server);
 
+// Check DB connectivity on startup
+const { testConnection } = require('./config/db');
+(async () => {
+  try {
+    await testConnection();
+    console.log('DB connection OK');
+  } catch (err) {
+    console.error('DB connectivity check failed:', err.message || err);
+    // do not exit; continue but the app will likely fail for DB ops
+  }
+})();
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`API server listening on :${PORT}`);
