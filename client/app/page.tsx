@@ -59,7 +59,7 @@ export default function Landing() {
           </select>
         </div>
         {error && <div className="text-sm text-red-600">{error}</div>}
-        <button className="button w-full" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
+        <button type="button" className="button w-full" disabled={loading} onClick={onLogin}>{loading ? 'Signing in...' : 'Sign In'}</button>
       </form>
     </div>
   );
