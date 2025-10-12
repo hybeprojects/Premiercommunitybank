@@ -24,6 +24,36 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       window.addEventListener('error', function(e){
         console.error('Global error caught:', e.error || e.message);
       });
+
+      // Remove attributes injected by privacy extensions (e.g., DuckDuckGo) before React hydrates
+      function removeInjectedAttributes() {
+        try {
+          var walker = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT, null, false);
+          var node = null;
+          while(node = walker.nextNode()) {
+            if(node.attributes && node.attributes.length) {
+              for(var i = node.attributes.length - 1; i >= 0; i--) {
+                var attr = node.attributes[i];
+                if(attr && attr.name && attr.name.indexOf('data-ddg') === 0) {
+                  node.removeAttribute(attr.name);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // Non-fatal
+          console.error('Error removing injected attributes', e);
+        }
+      }
+
+      // Run as early as possible
+      if(document.readyState === 'loading') {
+        removeInjectedAttributes();
+        document.addEventListener('DOMContentLoaded', removeInjectedAttributes);
+      } else {
+        removeInjectedAttributes();
+      }
+
     }catch(e){
       console.error('restoreFetchScript error', e);
     }
