@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import useSWR from 'swr';
 import axios from 'axios';
 import TransactionList from '../../../components/transactions/TransactionList';
