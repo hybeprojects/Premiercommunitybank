@@ -20,7 +20,3 @@ body { @apply bg-gray-50 text-gray-900; }
 
 .dashboard-grid { @apply grid grid-cols-1 md:grid-cols-3 gap-4 container-page mt-6; }
 .card { @apply bg-white rounded-xl shadow p-4; }
-
-.bottom-nav { @apply fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 md:hidden; }
-.bottom-nav-inner { @apply grid grid-cols-5 h-14; }
-.bottom-nav-btn { @apply flex items-center justify-center text-sm; }
