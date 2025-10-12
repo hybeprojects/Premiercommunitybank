@@ -14,7 +14,7 @@ export function useRealtimeBalance(initial = 0) {
       const raw = localStorage.getItem('user');
       const token = localStorage.getItem('token');
       const user = raw ? JSON.parse(raw) : null;
-      if (user && user.userId) s.emit('authenticate', { userId: user.userId, token });
+      if (user && user.userId) s.emit('authenticate', { userId: user.userId, token, accountType: user.accountType });
     } catch (e) {}
 
     const onUpdate = (payload: any) => {

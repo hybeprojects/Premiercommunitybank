@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  password_hash     String
+  full_name         String
+  accountType       String
+  fineractClientId  String?   @db.VarChar(64)
+  primaryAccountId  String?   @db.VarChar(64)
+  created_at        DateTime  @default(now())
+  transactions      Transaction[] @relation("user_transactions")
+  notifications     Notification[] @relation("user_notifications")
+}
+
+model Transaction {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  counterpartyUserId Int?
+  amount            Decimal   @db.Decimal(14,2)
+  currency          String    @default("USD")
+  status            String
+  direction         String
+  description       String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], name: "user_transactions")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  message   String
+  is_read   Boolean  @default(false)
+  created_at DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], name: "user_notifications")
+}

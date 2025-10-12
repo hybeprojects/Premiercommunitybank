@@ -41,7 +41,7 @@ export default function Landing() {
     <div className="auth-card">
       <h1 className="text-2xl font-semibold mb-2">Welcome to Premierbank</h1>
       <p className="text-gray-600 mb-6">Sign in to your account</p>
-      <form onSubmit={onLogin} className="space-y-4">
+      <form onSubmit={e => e.preventDefault()} className="space-y-4">
         <div className="text-sm text-center text-gray-500">New here? <a href="/signup" className="text-brand font-medium">Create an account</a></div>
         <div>
           <label className="block text-sm mb-1">Email</label>
@@ -59,7 +59,7 @@ export default function Landing() {
           </select>
         </div>
         {error && <div className="text-sm text-red-600">{error}</div>}
-        <button className="button w-full" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
+        <button type="button" className="button w-full" disabled={loading} onClick={onLogin}>{loading ? 'Signing in...' : 'Sign In'}</button>
       </form>
     </div>
   );

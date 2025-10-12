@@ -84,6 +84,32 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         // ignore if MutationObserver not available
       }
 
+      // Intercept early pointer/focus events in capture phase and clean extension attributes
+      function interceptAndClean(e) {
+        try {
+          var n = e.target;
+          while(n && n.getAttribute) {
+            if(n.attributes && n.attributes.length) {
+              for(var i = 0; i < n.attributes.length; i++) {
+                var at = n.attributes[i];
+                if(at && at.name && at.name.indexOf('data-ddg') === 0) {
+                  try { n.removeAttribute(at.name); } catch(err) {}
+                  try { e.stopImmediatePropagation(); } catch(err) {}
+                  return;
+                }
+              }
+            }
+            n = n.parentNode;
+          }
+        } catch (err) { /* ignore */ }
+      }
+      try {
+        document.addEventListener('pointerdown', interceptAndClean, true);
+        document.addEventListener('focusin', interceptAndClean, true);
+        // Remove capture listeners after short grace period
+        setTimeout(function(){ try{ document.removeEventListener('pointerdown', interceptAndClean, true); document.removeEventListener('focusin', interceptAndClean, true); } catch(e){} }, 10000);
+      } catch(e) { /* ignore */ }
+
       // Run removeInjectedAttributes as early as possible
       try {
         if(document.readyState === 'loading') {
