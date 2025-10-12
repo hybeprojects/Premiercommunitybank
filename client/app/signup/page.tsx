@@ -52,7 +52,7 @@ export default function SignupPage() {
     <div className="auth-card">
       <h1 className="text-2xl font-semibold mb-2">Create your Premierbank account</h1>
       <p className="text-gray-600 mb-6">Quickly create an account to access your dashboard.</p>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={e => e.preventDefault()} className="space-y-4">
         <div>
           <label className="block text-sm mb-1">Full name</label>
           <input className="input" value={fullName} onChange={e => setFullName(e.target.value)} required />
