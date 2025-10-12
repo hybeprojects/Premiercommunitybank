@@ -91,14 +91,38 @@ router.post('/', auth, async (req, res, next) => {
     );
 
     const io = getIO();
+    // emit notifications
     io.to(`user:${senderId}`).emit('notification', { id: senderNotif.insertId, type: 'transfer' });
     io.to(`user:${receiver.id}`).emit('notification', { id: receiverNotif.insertId, type: 'transfer' });
+
+    // emit transaction created events for immediate UI updates
+    const senderTx = { id: senderTxRes.insertId, userId: senderId, counterpartyUserId: receiver.id, amount, currency, status: 'Posted', direction: 'debit', description };
+    const receiverTx = { id: receiverTxRes.insertId, userId: receiver.id, counterpartyUserId: senderId, amount, currency, status: 'Pending', direction: 'credit', description };
+    io.to(`user:${senderId}`).emit('transaction_created', senderTx);
+    io.to(`user:${receiver.id}`).emit('transaction_created', receiverTx);
+
+    // emit updated balances for sender and receiver
+    (async () => {
+      try {
+        const senderBal = await computeBalance(senderPool, senderId);
+        io.to(`user:${senderId}`).emit('balance_update', { balance: senderBal });
+      } catch (e) { }
+      try {
+        const receiverBal = await computeBalance(receiverPool, receiver.id);
+        io.to(`user:${receiver.id}`).emit('balance_update', { balance: receiverBal });
+      } catch (e) { }
+    })();
 
     // Simulate pending -> completed after 10s for receiver
     setTimeout(async () => {
       try {
         await receiverPool.query('UPDATE transactions SET status = ? WHERE id = ?', ['Completed', receiverTxRes.insertId]);
         io.to(`user:${receiver.id}`).emit('transaction_update', { id: receiverTxRes.insertId, status: 'Completed' });
+        // update receiver balance after completion
+        try {
+          const receiverBal2 = await computeBalance(receiverPool, receiver.id);
+          io.to(`user:${receiver.id}`).emit('balance_update', { balance: receiverBal2 });
+        } catch (_) {}
       } catch (_) {}
     }, 10_000);
 
