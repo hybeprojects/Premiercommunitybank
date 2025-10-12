@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRealtimeBalance } from '../hooks/useRealtimeBalance';
+import { getSocket } from '../../lib/socket';
 
 function formatCurrency(v: number) {
   return `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
