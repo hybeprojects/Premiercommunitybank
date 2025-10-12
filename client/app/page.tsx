@@ -24,7 +24,16 @@ export default function Landing() {
       router.push(`/dashboard/${accountType}`);
     } catch (err: any) {
       console.error('Login error', err?.response || err);
-      setError(err?.response?.data?.error || 'Login failed');
+      const resp = err?.response?.data?.error;
+      let message = 'Login failed';
+      if (typeof resp === 'string') message = resp;
+      else if (resp && typeof resp === 'object') {
+        if (resp.details) message = resp.details;
+        else if (resp.message) message = resp.message;
+        else if (resp.code) message = resp.code;
+        else message = JSON.stringify(resp);
+      } else if (err?.message) message = err.message;
+      setError(message);
     } finally { setLoading(false); }
   };
 
