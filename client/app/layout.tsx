@@ -46,12 +46,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         }
       }
 
-      // Remove the bottom navigation for unauthenticated (public) pages
-      function removeBottomNavIfUnauthenticated() {
+      // Remove the bottom navigation for unauthenticated (public) pages or on the home page
+      function removeBottomNavIfNecessary() {
         try {
           var hasUser = false;
           try { hasUser = !!localStorage.getItem('user'); } catch (e) { hasUser = false; }
-          if(!hasUser) {
+          var isHome = false;
+          try { isHome = location && location.pathname === '/'; } catch (e) { isHome = false; }
+
+          if(!hasUser || isHome) {
             var nav = document.querySelector('nav.bottom-nav');
             if(nav && nav.parentNode) nav.parentNode.removeChild(nav);
           }
@@ -63,11 +66,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       // Run as early as possible
       if(document.readyState === 'loading') {
         removeInjectedAttributes();
-        removeBottomNavIfUnauthenticated();
-        document.addEventListener('DOMContentLoaded', function(){ removeInjectedAttributes(); removeBottomNavIfUnauthenticated(); });
+        removeBottomNavIfNecessary();
+        document.addEventListener('DOMContentLoaded', function(){ removeInjectedAttributes(); removeBottomNavIfNecessary(); });
       } else {
         removeInjectedAttributes();
-        removeBottomNavIfUnauthenticated();
+        removeBottomNavIfNecessary();
       }
 
     }catch(e){
