@@ -47,31 +47,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         }
       }
 
-      // Remove the bottom navigation for unauthenticated (public) pages or on the home page
-      function removeBottomNavIfNecessary() {
-        try {
-          var hasUser = false;
-          try { hasUser = !!localStorage.getItem('user'); } catch (e) { hasUser = false; }
-          var isHome = false;
-          try { isHome = location && location.pathname === '/'; } catch (e) { isHome = false; }
-
-          if(!hasUser || isHome) {
-            var nav = document.querySelector('nav.bottom-nav');
-            if(nav && nav.parentNode) nav.parentNode.removeChild(nav);
-          }
-        } catch (e) {
-          console.error('Error removing bottom nav', e);
-        }
-      }
-
-      // Run as early as possible
+      // Run removeInjectedAttributes as early as possible
       if(document.readyState === 'loading') {
         removeInjectedAttributes();
-        removeBottomNavIfNecessary();
-        document.addEventListener('DOMContentLoaded', function(){ removeInjectedAttributes(); removeBottomNavIfNecessary(); });
+        document.addEventListener('DOMContentLoaded', removeInjectedAttributes);
       } else {
         removeInjectedAttributes();
-        removeBottomNavIfNecessary();
       }
 
     }catch(e){
