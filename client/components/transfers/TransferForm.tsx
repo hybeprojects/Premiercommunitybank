@@ -36,12 +36,13 @@ export default function TransferForm() {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/api/transfers`, { receiverEmail, receiverAccountType, amount, currency, description }, {
+      await axios.post('/api/transfers', { receiverEmail, receiverAccountType, amount, currency, description }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setMessage('Transfer submitted. The receiver will see it as Pending and it will complete shortly.');
       (e.currentTarget as HTMLFormElement).reset();
     } catch (err: any) {
+      console.error('Transfer error', err?.response || err);
       setError(err?.response?.data?.error || 'Transfer failed');
     } finally { setSubmitting(false); }
   }
