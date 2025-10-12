@@ -1,63 +1,102 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRealtimeBalance } from '../hooks/useRealtimeBalance';
 import { getSocket } from '../../lib/socket';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Eye, EyeOff, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { clsx } from 'clsx';
+import { tailwindMerge } from 'tailwind-merge';
 
-function formatCurrency(v: number) {
-  return `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function cn(...inputs) {
+  return tailwindMerge(clsx(inputs));
 }
 
-export default function AccountOverview({ transactions }: { transactions?: any[] }) {
-  // compute balance from transactions fallback
+function formatCurrency(v, isHidden) {
+  return isHidden ? '****' : `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+const MOCK_DATA = [
+  { name: '7d ago', balance: 5234.56 },
+  { name: '6d ago', balance: 5300.12 },
+  { name: '5d ago', balance: 5250.78 },
+  { name: '4d ago', balance: 5400.99 },
+  { name: '3d ago', balance: 5350.45 },
+  { name: '2d ago', balance: 5500.67 },
+  { name: 'Yesterday', balance: 5480.33 },
+  { name: 'Today', balance: 5600.00 },
+];
+
+export default function AccountOverview({ transactions }) {
   const computed = (transactions || []).reduce((acc, t) => acc + ((t.direction === 'credit') ? Number(t.amount) : -Number(t.amount)), 0);
   const { balance, setBalance } = useRealtimeBalance(computed);
-
-  const [localTx, setLocalTx] = React.useState((transactions || []).slice(-12));
-
-  React.useEffect(() => {
-    setLocalTx((transactions || []).slice(-12));
-  }, [transactions]);
+  const [isHidden, setIsHidden] = useState(false);
 
   React.useEffect(() => {
     const s = getSocket();
     if (!s) return;
-    const onCreated = (tx: any) => {
-      try { setLocalTx(prev => [...prev.slice(-11), tx]); } catch (e) {}
-    };
-    const onUpdate = (payload: any) => {
-      try { setLocalTx(prev => prev.map(t => (t.id === payload.id ? { ...t, ...payload } : t))); } catch (e) {}
-    };
-    const onBal = (p: any) => { if (typeof p.balance === 'number') setBalance(p.balance); };
-    s.on('transaction_created', onCreated);
-    s.on('transaction_update', onUpdate);
+    const onBal = (p) => { if (typeof p.balance === 'number') setBalance(p.balance); };
     s.on('balance_update', onBal);
-    return () => { s.off('transaction_created', onCreated); s.off('transaction_update', onUpdate); s.off('balance_update', onBal); };
+    return () => { s.off('balance_update', onBal); };
   }, [setBalance]);
 
-  const spark = localTx.map(t => (t.direction === 'credit' ? 1 : -1) * Number(t.amount));
-  const min = Math.min(...spark, 0);
-  const max = Math.max(...spark, 1);
-  const points = spark.map((v, i) => {
-    const x = (i / Math.max(1, spark.length - 1)) * 100;
-    const y = 100 - ((v - min) / (max - min || 1)) * 100;
-    return `${x},${y}`;
-  }).join(' ');
-
   return (
-    <div className="card">
-      <div className="flex items-center justify-between">
+    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <div className="text-sm text-gray-500">Default account</div>
-          <div className="text-2xl font-semibold mt-1">{formatCurrency(balance)}</div>
-          <div className="text-xs text-gray-400">Available balance</div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Checking Account</h2>
+            <button onClick={() => setIsHidden(!isHidden)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+              {isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Primary account</p>
         </div>
-        <div className="w-28 h-12">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-            <polyline fill="none" stroke="#0284c7" strokeWidth={2} points={points} />
-          </svg>
+        <div className="text-right">
+          <p className={cn('text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white', isHidden && 'blur-sm')}>
+            {formatCurrency(balance, isHidden)}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Available Balance</p>
         </div>
       </div>
+      <div className="h-32 sm:h-40 -mx-4 sm:-mx-6 mb-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={MOCK_DATA} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+            <defs>
+              <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                color: '#333'
+              }}
+              formatter={(value) => [`$${value.toFixed(2)}`, 'Balance']}
+            />
+            <Area type="monotone" dataKey="balance" stroke="#8884d8" fillOpacity={1} fill="url(#balanceGradient)" />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-center">
+        <QuickActionButton icon={<TrendingUp size={20} />} label="Deposit" />
+        <QuickActionButton icon={<TrendingDown size={20} />} label="Withdraw" />
+        <QuickActionButton icon={<ArrowRight size={20} />} label="Transfer" />
+        <QuickActionButton icon={<span>...</span>} label="More" />
+      </div>
     </div>
+  );
+}
+
+function QuickActionButton({ icon, label }) {
+  return (
+    <button className="flex flex-col items-center justify-center p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">
+      <div className="text-indigo-500 dark:text-indigo-400 mb-1">{icon}</div>
+      <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">{label}</span>
+    </button>
   );
 }
