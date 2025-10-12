@@ -66,15 +66,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: restoreFetchScript }} />
         <Header />
         <main className="min-h-[calc(100vh-3.5rem)] pb-16">{children}</main>
-        <nav className="bottom-nav">
-          <div className="bottom-nav-inner">
-            <button className="bottom-nav-btn">Home</button>
-            <button className="bottom-nav-btn">Accounts</button>
-            <button className="bottom-nav-btn">Transfer</button>
-            <button className="bottom-nav-btn">Activity</button>
-            <button className="bottom-nav-btn">More</button>
-          </div>
-        </nav>
+        <BottomNav />
       </body>
     </html>
   );
