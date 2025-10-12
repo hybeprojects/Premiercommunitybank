@@ -18,6 +18,8 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.10.1",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "@prisma/client": "^4.17.0",
+    "prisma": "^4.17.0"
   }
 }
