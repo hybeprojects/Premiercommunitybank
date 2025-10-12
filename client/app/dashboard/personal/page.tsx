@@ -6,12 +6,11 @@ import TransactionList from '../../../components/transactions/TransactionList';
 import TransferForm from '../../../components/transfers/TransferForm';
 import { useAuthGuard } from '../../../components/hooks/useAuthGuard';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const fetcher = (url: string) => axios.get(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(r => r.data);
 
 export default function PersonalDashboard() {
   useAuthGuard();
-  const { data, isLoading, error } = useSWR(`${API}/api/transactions`, fetcher, { refreshInterval: 5000 });
+  const { data, isLoading, error } = useSWR(`/api/transactions`, fetcher, { refreshInterval: 5000 });
 
   return (
     <div className="container-page mt-6">

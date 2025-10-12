@@ -4,7 +4,6 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Landing() {
   const router = useRouter();
@@ -19,11 +18,12 @@ export default function Landing() {
     setError(null);
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API}/api/auth/login`, { email, password, accountType });
+      const { data } = await axios.post('/api/auth/login', { email, password, accountType });
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push(`/dashboard/${accountType}`);
     } catch (err: any) {
+      console.error('Login error', err?.response || err);
       setError(err?.response?.data?.error || 'Login failed');
     } finally { setLoading(false); }
   };
@@ -33,6 +33,7 @@ export default function Landing() {
       <h1 className="text-2xl font-semibold mb-2">Welcome to Premierbank</h1>
       <p className="text-gray-600 mb-6">Sign in to your account</p>
       <form onSubmit={onLogin} className="space-y-4">
+        <div className="text-sm text-center text-gray-500">New here? <a href="/signup" className="text-brand font-medium">Create an account</a></div>
         <div>
           <label className="block text-sm mb-1">Email</label>
           <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required />

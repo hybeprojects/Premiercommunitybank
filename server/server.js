@@ -21,6 +21,19 @@ const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
 app.use(express.json());
 
+// Simple request logger (masking sensitive fields)
+app.use((req, res, next) => {
+  try {
+    const safeBody = { ...req.body };
+    if (safeBody.password) safeBody.password = '***REDACTED***';
+    if (safeBody.confirmPassword) safeBody.confirmPassword = '***REDACTED***';
+    console.log(`[req] ${req.method} ${req.originalUrl} body=${JSON.stringify(safeBody)}`);
+  } catch (e) {
+    console.error('Failed to log request', e);
+  }
+  next();
+});
+
 // Basic health check
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, service: 'premierbank-server', env: process.env.NODE_ENV || 'development' });
@@ -41,6 +54,18 @@ app.use(errorHandler);
 
 const server = http.createServer(app);
 initWebsocket(server);
+
+// Check DB connectivity on startup
+const { testConnection } = require('./config/db');
+(async () => {
+  try {
+    await testConnection();
+    console.log('DB connection OK');
+  } catch (err) {
+    console.error('DB connectivity check failed:', err.message || err);
+    // do not exit; continue but the app will likely fail for DB ops
+  }
+})();
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
