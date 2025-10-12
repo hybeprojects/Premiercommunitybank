@@ -1,7 +1,6 @@
 import './globals.css';
 import type { ReactNode } from 'react';
 import Header from '../components/common/Header';
-import BottomNav from '../components/common/BottomNav';
 
 export const metadata = {
   title: 'Premierbank',
