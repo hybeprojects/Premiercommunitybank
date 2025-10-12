@@ -1,6 +1,6 @@
 const { Server } = require('socket.io');
 
-const { Server } = require('socket.io');
+const { Server: IoServer } = require('socket.io');
 const { getPool } = require('./db');
 let io;
 
@@ -21,7 +21,7 @@ async function computeBalanceForUser(accountType, userId) {
 }
 
 function init(server) {
-  io = new Server(server, {
+  io = new IoServer(server, {
     cors: {
       origin: process.env.CLIENT_URL || '*',
       methods: ['GET', 'POST']
