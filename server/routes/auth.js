@@ -8,21 +8,41 @@ const router = express.Router();
 
 router.post('/register', async (req, res, next) => {
   try {
-    const { email, password, fullName, accountType, fineractClientId = null, primaryAccountId = null } = req.body || {};
-    if (!email || !password || !fullName || !accountType) return res.status(400).json({ error: 'Missing fields' });
-    if (!['personal', 'business'].includes(accountType)) return res.status(400).json({ error: 'Invalid accountType' });
+    let { email, password, fullName, accountType, fineractClientId = null, primaryAccountId = null } = req.body || {};
+    // Normalize inputs
+    email = typeof email === 'string' ? email.trim().toLowerCase() : email;
+    fullName = typeof fullName === 'string' ? fullName.trim() : fullName;
+
+    if (!email || !password || !fullName || !accountType) {
+      return res.status(400).json({ error: { code: 'MISSING_FIELDS', details: 'email, password, fullName and accountType are required' } });
+    }
+    if (!['personal', 'business'].includes(accountType)) {
+      return res.status(400).json({ error: { code: 'INVALID_ACCOUNT_TYPE', details: 'accountType must be personal or business' } });
+    }
+
     const pool = await getPool(accountType);
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (existing.length) return res.status(409).json({ error: 'Email already registered' });
+
+    // Check existing email
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
+    if (existing.length) return res.status(409).json({ error: { code: 'EMAIL_EXISTS', details: 'Email already registered' } });
+
     const hash = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       'INSERT INTO users (email, password_hash, full_name, accountType, fineractClientId, primaryAccountId) VALUES (?, ?, ?, ?, ?, ?)',
       [email, hash, fullName, accountType, fineractClientId, primaryAccountId]
     );
+
     const userId = result.insertId;
     const token = sign({ userId, email, fullName, accountType, fineractClientId, primaryAccountId });
     res.json({ token, user: { userId, email, fullName, accountType, fineractClientId, primaryAccountId } });
-  } catch (e) { next(e); }
+  } catch (e) {
+    console.error('Register error', e);
+    // If it's a DB error, respond with a structured message
+    if (e && e.code && e.sqlMessage) {
+      return res.status(500).json({ error: { code: 'DB_ERROR', details: e.sqlMessage } });
+    }
+    next(e);
+  }
 });
 
 router.post('/login', async (req, res, next) => {
