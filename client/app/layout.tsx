@@ -1,5 +1,6 @@
 import './globals.css';
 import type { ReactNode } from 'react';
+import Header from '../components/common/Header';
 
 export const metadata = {
   title: 'Premierbank',
