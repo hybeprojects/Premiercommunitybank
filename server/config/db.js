@@ -80,4 +80,17 @@ async function getPool(accountType) {
   return pools[dbName];
 }
 
-module.exports = { getPool };
+async function testConnection() {
+  const mysql = require('mysql2/promise');
+  const cfg = { ...baseConfig, database: process.env.DB_NAME };
+  try {
+    const conn = await mysql.createConnection(cfg);
+    await conn.ping();
+    await conn.end();
+    return true;
+  } catch (e) {
+    throw new Error(`DB connection failed: ${e.message}`);
+  }
+}
+
+module.exports = { getPool, testConnection };
