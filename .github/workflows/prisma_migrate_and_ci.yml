@@ -1,0 +1,66 @@
+name: CI - Migrate & Build
+
+on:
+  push:
+    branches: [ aura-hub ]
+  pull_request:
+    branches: [ main, aura-hub ]
+
+permissions:
+  contents: read
+
+jobs:
+  migrate-and-build:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install server deps
+        working-directory: server
+        run: npm ci
+
+      - name: Install root deps (optional)
+        run: npm ci || true
+
+      - name: Prisma generate
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma generate
+
+      - name: Run Prisma migrations (deploy)
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "DATABASE_URL not set, skipping migrations";
+            exit 0;
+          fi
+          npx prisma migrate deploy --preview-feature
+
+      - name: Build client
+        run: |
+          npm --prefix client ci
+          npm --prefix client run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Build server (typechecks/lint optional)
+        working-directory: server
+        run: |
+          npm run prisma:generate || true
+
+      - name: Upload CI badge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-result
+          path: server/prisma/migrations || .
