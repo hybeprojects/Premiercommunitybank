@@ -46,12 +46,28 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         }
       }
 
+      // Remove the bottom navigation for unauthenticated (public) pages
+      function removeBottomNavIfUnauthenticated() {
+        try {
+          var hasUser = false;
+          try { hasUser = !!localStorage.getItem('user'); } catch (e) { hasUser = false; }
+          if(!hasUser) {
+            var nav = document.querySelector('nav.bottom-nav');
+            if(nav && nav.parentNode) nav.parentNode.removeChild(nav);
+          }
+        } catch (e) {
+          console.error('Error removing bottom nav', e);
+        }
+      }
+
       // Run as early as possible
       if(document.readyState === 'loading') {
         removeInjectedAttributes();
-        document.addEventListener('DOMContentLoaded', removeInjectedAttributes);
+        removeBottomNavIfUnauthenticated();
+        document.addEventListener('DOMContentLoaded', function(){ removeInjectedAttributes(); removeBottomNavIfUnauthenticated(); });
       } else {
         removeInjectedAttributes();
+        removeBottomNavIfUnauthenticated();
       }
 
     }catch(e){
