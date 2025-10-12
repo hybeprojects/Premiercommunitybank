@@ -33,11 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <script dangerouslySetInnerHTML={{ __html: restoreFetchScript }} />
-        {/* Header component */}
-        <div id="page-header">
-          {/* Client component loaded here */}
-          <script dangerouslySetInnerHTML={{ __html: "" }} />
-        </div> /* Header will be mounted in client via Header import on pages */
+        <Header />
         <main className="min-h-[calc(100vh-3.5rem)] pb-16">{children}</main>
         <nav className="bottom-nav">
           <div className="bottom-nav-inner">
