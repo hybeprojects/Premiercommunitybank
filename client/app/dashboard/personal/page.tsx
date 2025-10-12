@@ -1,38 +1,40 @@
 "use client";
 
-"use client";
-
 import useSWR from 'swr';
 import axios from 'axios';
+import Header from '../../../components/common/Header';
+import AccountOverview from '../../../components/dashboard/AccountOverview';
 import TransactionList from '../../../components/transactions/TransactionList';
 import TransferForm from '../../../components/transfers/TransferForm';
-import AccountOverview from '../../../components/dashboard/AccountOverview';
+import FinancialInsights from '../../../components/dashboard/FinancialInsights';
 import { useAuthGuard } from '../../../components/hooks/useAuthGuard';
 
-const fetcher = (url: string) => axios.get(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(r => r.data);
+const fetcher = (url) => axios.get(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(r => r.data);
 
 export default function PersonalDashboard() {
   useAuthGuard();
-  const { data, isLoading, error } = useSWR(`/api/transactions`, fetcher, { refreshInterval: 5000 });
+  const { data: transactions, isLoading, error } = useSWR('/api/transactions', fetcher, { refreshInterval: 5000 });
 
   return (
-    <div className="container-page mt-6">
-      <h1 className="text-xl font-semibold mb-4">Personal Overview</h1>
-      <div className="dashboard-grid">
-        <div className="md:col-span-2 space-y-4">
-          <div className="card">
-            <AccountOverview transactions={data} />
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <Header />
+      <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* Main Content: Left side */}
+          <div className="lg:col-span-2 space-y-8">
+            <AccountOverview transactions={transactions} />
+            <TransactionList items={transactions} isLoading={isLoading} error={error ? 'Failed to load transactions' : null} />
           </div>
-          <div className="card">
-            <h2 className="font-medium mb-3">Recent Activity</h2>
-            <TransactionList items={data} isLoading={isLoading} error={error ? 'Failed to load transactions' : null} variant="personal" />
+
+          {/* Sidebar: Right side */}
+          <div className="space-y-8">
+            <TransferForm />
+            <FinancialInsights />
           </div>
+
         </div>
-        <div className="card">
-          <h2 className="font-medium mb-3">Quick Actions</h2>
-          <TransferForm />
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
