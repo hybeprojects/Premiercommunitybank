@@ -7,9 +7,31 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const restoreFetchScript = `(function(){
+    try{
+      // Preserve native fetch if not already preserved
+      if(!window.__nativeFetch){
+        window.__nativeFetch = window.fetch.bind(window);
+      } else {
+        // restore original fetch in case third-party overwrote it
+        window.fetch = window.__nativeFetch;
+      }
+      // Global error hooks to surface failures in dev overlay
+      window.addEventListener('unhandledrejection', function(e){
+        console.error('Unhandled promise rejection:', e.reason);
+      });
+      window.addEventListener('error', function(e){
+        console.error('Global error caught:', e.error || e.message);
+      });
+    }catch(e){
+      console.error('restoreFetchScript error', e);
+    }
+  })();`;
+
   return (
     <html lang="en">
       <body>
+        <script dangerouslySetInnerHTML={{ __html: restoreFetchScript }} />
         <header className="header">
           <div className="header-inner">
             <div className="brand">
