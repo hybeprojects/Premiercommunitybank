@@ -25,15 +25,24 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/auth/register', { email, password, fullName, accountType });
+      // normalize on client as well
+      const payload = { email: email.trim().toLowerCase(), password, fullName: fullName.trim(), accountType };
+      const { data } = await axios.post('/api/auth/register', payload);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push(`/dashboard/${accountType}`);
     } catch (err: any) {
       console.error('Signup error', err?.response || err);
-      const serverMessage = err?.response && err.response.data && err.response.data.error;
-      const message = serverMessage || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      setError(message || 'Signup failed');
+      const serverError = err?.response?.data?.error;
+      if (serverError && typeof serverError === 'object') {
+        const code = serverError.code || 'SERVER_ERROR';
+        const details = serverError.details || JSON.stringify(serverError);
+        setError(`${code}: ${details}`);
+      } else {
+        const serverMessage = err?.response && err.response.data && (err.response.data.error || err.response.data.message);
+        const message = serverMessage || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+        setError(message || 'Signup failed');
+      }
     } finally {
       setLoading(false);
     }
