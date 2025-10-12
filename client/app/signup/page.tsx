@@ -77,7 +77,7 @@ export default function SignupPage() {
           </select>
         </div>
         {error && <div className="text-sm text-red-600">{error}</div>}
-        <button className="button w-full" disabled={loading}>{loading ? 'Creating account...' : 'Create account'}</button>
+        <button type="button" className="button w-full" disabled={loading} onClick={onSubmit}>{loading ? 'Creating account...' : 'Create account'}</button>
       </form>
     </div>
   );
