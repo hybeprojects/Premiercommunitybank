@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+
+body { @apply bg-gray-50 text-gray-900; }
+
+.container-page { @apply max-w-6xl mx-auto px-4; }
+
+.header { @apply sticky top-0 bg-white/90 backdrop-blur border-b border-gray-200; }
+.header-inner { @apply container-page flex items-center justify-between h-14; }
+
+.brand { @apply flex items-center gap-2 font-semibold text-brand; }
+
+.auth-card { @apply container-page max-w-md mt-16 bg-white rounded-xl shadow p-6; }
+.input { @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand; }
+.button { @apply inline-flex items-center justify-center rounded-md bg-brand text-white px-4 py-2 hover:bg-brand-dark disabled:opacity-50; }
+.select { @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2; }
+
+.dashboard-grid { @apply grid grid-cols-1 md:grid-cols-3 gap-4 container-page mt-6; }
+.card { @apply bg-white rounded-xl shadow p-4; }
+
+.bottom-nav { @apply fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 md:hidden; }
+.bottom-nav-inner { @apply grid grid-cols-5 h-14; }
+.bottom-nav-btn { @apply flex items-center justify-center text-sm; }
