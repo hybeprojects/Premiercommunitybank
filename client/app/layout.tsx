@@ -32,15 +32,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <script dangerouslySetInnerHTML={{ __html: restoreFetchScript }} />
-        <header className="header">
-          <div className="header-inner">
-            <div className="brand">
-              <span>🏦</span>
-              <span>Premierbank</span>
-            </div>
-            <div className="text-sm text-gray-600">Secure Banking</div>
-          </div>
-        </header>
+        {/* Header component */}
+        <div id="page-header">
+          {/* Client component loaded here */}
+          <script dangerouslySetInnerHTML={{ __html: "" }} />
+        </div> /* Header will be mounted in client via Header import on pages */
         <main className="min-h-[calc(100vh-3.5rem)] pb-16">{children}</main>
         <nav className="bottom-nav">
           <div className="bottom-nav-inner">
