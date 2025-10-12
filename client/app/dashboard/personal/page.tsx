@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import axios from 'axios';
 import TransactionList from '../../../components/transactions/TransactionList';
 import TransferForm from '../../../components/transfers/TransferForm';
+import AccountOverview from '../../../components/dashboard/AccountOverview';
 import { useAuthGuard } from '../../../components/hooks/useAuthGuard';
 
 const fetcher = (url: string) => axios.get(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(r => r.data);
