@@ -65,7 +65,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: restoreFetchScript }} />
         <Header />
         <main className="min-h-[calc(100vh-3.5rem)] pb-16">{children}</main>
-        <BottomNav />
       </body>
     </html>
   );
