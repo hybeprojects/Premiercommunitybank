@@ -10,7 +10,7 @@ const fetcher = (url: string) => axios.get(url, { headers: { Authorization: `Bea
 
 export default function BusinessDashboard() {
   useAuthGuard();
-  const { data, isLoading, error } = useSWR(`${API}/api/transactions`, fetcher, { refreshInterval: 5000 });
+  const { data, isLoading, error } = useSWR(`/api/transactions`, fetcher, { refreshInterval: 5000 });
 
   return (
     <div className="container-page mt-6">
