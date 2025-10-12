@@ -4,7 +4,6 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Landing() {
   const router = useRouter();
