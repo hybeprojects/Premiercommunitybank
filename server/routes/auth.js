@@ -47,15 +47,16 @@ router.post('/register', async (req, res, next) => {
 
 router.post('/login', async (req, res, next) => {
   try {
-    const { email, password, accountType } = req.body || {};
-    if (!email || !password || !accountType) return res.status(400).json({ error: 'Missing credentials' });
-    if (!['personal', 'business'].includes(accountType)) return res.status(400).json({ error: 'Invalid accountType' });
+    let { email, password, accountType } = req.body || {};
+    email = typeof email === 'string' ? email.trim().toLowerCase() : email;
+    if (!email || !password || !accountType) return res.status(400).json({ error: { code: 'MISSING_CREDENTIALS', details: 'email, password and accountType are required' } });
+    if (!['personal', 'business'].includes(accountType)) return res.status(400).json({ error: { code: 'INVALID_ACCOUNT_TYPE', details: 'accountType must be personal or business' } });
     const pool = await getPool(accountType);
     const [rows] = await pool.query('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
     const user = rows[0];
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) return res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', details: 'Invalid email or password' } });
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!ok) return res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', details: 'Invalid email or password' } });
     const token = sign({ userId: user.id, email: user.email, fullName: user.full_name, accountType: user.accountType, fineractClientId: user.fineractClientId, primaryAccountId: user.primaryAccountId });
     res.json({ token, user: { userId: user.id, email: user.email, fullName: user.full_name, accountType: user.accountType, fineractClientId: user.fineractClientId, primaryAccountId: user.primaryAccountId } });
   } catch (e) { next(e); }
