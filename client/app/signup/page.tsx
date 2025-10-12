@@ -31,7 +31,9 @@ export default function SignupPage() {
       router.push(`/dashboard/${accountType}`);
     } catch (err: any) {
       console.error('Signup error', err?.response || err);
-      setError(err?.response?.data?.error || 'Signup failed');
+      const serverMessage = err?.response && err.response.data && err.response.data.error;
+      const message = serverMessage || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      setError(message || 'Signup failed');
     } finally {
       setLoading(false);
     }
