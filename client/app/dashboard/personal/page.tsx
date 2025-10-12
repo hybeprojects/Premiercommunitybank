@@ -16,9 +16,14 @@ export default function PersonalDashboard() {
     <div className="container-page mt-6">
       <h1 className="text-xl font-semibold mb-4">Personal Overview</h1>
       <div className="dashboard-grid">
-        <div className="card md:col-span-2">
-          <h2 className="font-medium mb-3">Recent Activity</h2>
-          <TransactionList items={data} isLoading={isLoading} error={error ? 'Failed to load transactions' : null} variant="personal" />
+        <div className="md:col-span-2 space-y-4">
+          <div className="card">
+            <AccountOverview transactions={data} />
+          </div>
+          <div className="card">
+            <h2 className="font-medium mb-3">Recent Activity</h2>
+            <TransactionList items={data} isLoading={isLoading} error={error ? 'Failed to load transactions' : null} variant="personal" />
+          </div>
         </div>
         <div className="card">
           <h2 className="font-medium mb-3">Quick Actions</h2>
