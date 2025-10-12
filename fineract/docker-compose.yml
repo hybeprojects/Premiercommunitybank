@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-fineract}
+    ports:
+      - "3307:3306"
+    command: ["--default-authentication-plugin=mysql_native_password"]
+
+  fineract:
+    image: apache/fineract:1.12.1
+    ports:
+      - "8080:8080"
+    environment:
+      FINERACT_DEFAULT_TENANTDB_HOSTNAME: mysql
+      FINERACT_DEFAULT_TENANTDB_PORT: 3306
+      FINERACT_DEFAULT_TENANTDB_UID: root
+      FINERACT_DEFAULT_TENANTDB_PWD: ${DB_PASSWORD:-root}
+      FINERACT_DEFAULT_TENANTDB_NAME: ${DB_NAME:-fineract}
+    depends_on:
+      - mysql
