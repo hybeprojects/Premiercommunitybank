@@ -25,11 +25,12 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API}/api/auth/register`, { email, password, fullName, accountType });
+      const { data } = await axios.post('/api/auth/register', { email, password, fullName, accountType });
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push(`/dashboard/${accountType}`);
     } catch (err: any) {
+      console.error('Signup error', err?.response || err);
       setError(err?.response?.data?.error || 'Signup failed');
     } finally {
       setLoading(false);
