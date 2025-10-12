@@ -18,11 +18,12 @@ export default function Landing() {
     setError(null);
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API}/api/auth/login`, { email, password, accountType });
+      const { data } = await axios.post('/api/auth/login', { email, password, accountType });
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push(`/dashboard/${accountType}`);
     } catch (err: any) {
+      console.error('Login error', err?.response || err);
       setError(err?.response?.data?.error || 'Login failed');
     } finally { setLoading(false); }
   };
