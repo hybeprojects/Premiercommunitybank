@@ -47,13 +47,52 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         }
       }
 
-      // Run removeInjectedAttributes as early as possible
-      if(document.readyState === 'loading') {
-        removeInjectedAttributes();
-        document.addEventListener('DOMContentLoaded', removeInjectedAttributes);
-      } else {
-        removeInjectedAttributes();
+      // MutationObserver to catch attributes added after initial pass (some extensions modify DOM later)
+      var observer;
+      try {
+        observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            try {
+              if(mutation.type === 'attributes' && mutation.attributeName && mutation.attributeName.indexOf('data-ddg') === 0) {
+                mutation.target.removeAttribute(mutation.attributeName);
+              }
+              if(mutation.addedNodes && mutation.addedNodes.length) {
+                for(var j=0;j<mutation.addedNodes.length;j++){
+                  var n = mutation.addedNodes[j];
+                  if(n && n.nodeType === 1) {
+                    var attrs = n.attributes;
+                    if(attrs && attrs.length){
+                      for(var k = attrs.length - 1; k >= 0; k--) {
+                        var a = attrs[k];
+                        if(a && a.name && a.name.indexOf('data-ddg') === 0) {
+                          n.removeAttribute(a.name);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } catch(e) { /* ignore per-node errors */ }
+          });
+        });
+
+        observer.observe(document, { attributes: true, childList: true, subtree: true });
+
+        // Stop observing after a short grace period to avoid long-running observers
+        setTimeout(function(){ try{ observer.disconnect(); } catch(e){} }, 5000);
+      } catch(e) {
+        // ignore if MutationObserver not available
       }
+
+      // Run removeInjectedAttributes as early as possible
+      try {
+        if(document.readyState === 'loading') {
+          removeInjectedAttributes();
+          document.addEventListener('DOMContentLoaded', removeInjectedAttributes);
+        } else {
+          removeInjectedAttributes();
+        }
+      } catch(e){ /* ignore */ }
 
     }catch(e){
       console.error('restoreFetchScript error', e);

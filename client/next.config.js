@@ -3,8 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
     if (process.env.NODE_ENV === 'development') {
+      const apiServer = process.env.API_SERVER_URL || 'http://localhost:5000';
       return [
-        { source: '/api/:path*', destination: 'http://localhost:5002/api/:path*' }
+        { source: '/api/:path*', destination: `${apiServer}/api/:path*` }
       ];
     }
     return [];

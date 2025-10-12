@@ -1,0 +1,98 @@
+name: Sync envs to Netlify & Render
+
+on:
+  push:
+    branches: [ aura-hub ]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  sync-envs:
+    name: Sync environment variables to Netlify and Render
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+      FINERACT_BASE_URL: ${{ secrets.FINERACT_BASE_URL }}
+      FINERACT_TENANT: ${{ secrets.FINERACT_TENANT }}
+      FINERACT_USERNAME: ${{ secrets.FINERACT_USERNAME }}
+      FINERACT_PASSWORD: ${{ secrets.FINERACT_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      SOCKET_PORT: ${{ secrets.SOCKET_PORT }}
+      PORT: ${{ secrets.PORT }}
+      CLIENT_URL: ${{ secrets.CLIENT_URL }}
+      NODE_ENV: ${{ secrets.NODE_ENV }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq curl
+          npm install -g netlify-cli
+
+      - name: Build list of keys
+        id: keys
+        run: |
+          echo "FINERACT_BASE_URL FINERACT_TENANT FINERACT_USERNAME FINERACT_PASSWORD JWT_SECRET JWT_EXPIRES_IN DB_HOST DB_PORT DB_USER DB_PASSWORD DB_NAME SOCKET_PORT PORT CLIENT_URL NODE_ENV" > keys.txt
+          echo "::set-output name=keys::$(cat keys.txt)"
+
+      - name: Set env vars on Netlify (if token/site provided)
+        if: env.NETLIFY_AUTH_TOKEN && env.NETLIFY_SITE_ID
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          set -euo pipefail
+          KEYS="FINERACT_BASE_URL FINERACT_TENANT FINERACT_USERNAME FINERACT_PASSWORD JWT_SECRET JWT_EXPIRES_IN DB_HOST DB_PORT DB_USER DB_PASSWORD DB_NAME SOCKET_PORT PORT CLIENT_URL NODE_ENV"
+          for key in $KEYS; do
+            val="${!key}"
+            if [ -n "$val" ]; then
+              echo "Setting Netlify env $key"
+              netlify env:set --site "$NETLIFY_SITE_ID" "$key" "$val" --prod || true
+            else
+              echo "Skipping $key: empty"
+            fi
+          done
+
+      - name: Sync env vars to Render (if API key/service provided)
+        if: env.RENDER_API_KEY && env.RENDER_SERVICE_ID
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          KEYS=(FINERACT_BASE_URL FINERACT_TENANT FINERACT_USERNAME FINERACT_PASSWORD JWT_SECRET JWT_EXPIRES_IN DB_HOST DB_PORT DB_USER DB_PASSWORD DB_NAME SOCKET_PORT PORT CLIENT_URL NODE_ENV)
+
+          API_URL="https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars"
+          existing=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars")
+
+          for key in "${KEYS[@]}"; do
+            val="${!key}"
+            if [ -z "$val" ]; then
+              echo "Skipping $key: empty"
+              continue
+            fi
+            id=$(echo "$existing" | jq -r --arg name "$key" '.[] | select(.name==$name) | .id') || true
+            if [ -n "$id" ] && [ "$id" != "null" ]; then
+              echo "Updating Render env var $key"
+              curl -s -X PATCH -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" -d "{\"value\":\"$val\"}" "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars/$id"
+            else
+              echo "Creating Render env var $key"
+              curl -s -X POST -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" -d "{\"name\":\"$key\",\"value\":\"$val\"}" "https://api.render.com/v1/services/$RENDER_SERVICE_ID/env-vars"
+            fi
+          done
+
+      - name: Done
+        run: echo "Env sync complete"
