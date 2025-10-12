@@ -1,6 +1,7 @@
 import './globals.css';
 import type { ReactNode } from 'react';
 import Header from '../components/common/Header';
+import RouteTransition from '../components/common/RouteTransition';
 
 export const metadata = {
   title: 'Premierbank',
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <script dangerouslySetInnerHTML={{ __html: restoreFetchScript }} />
         <Header />
+        <RouteTransition />
         <main className="min-h-[calc(100vh-3.5rem)] pb-16">{children}</main>
       </body>
     </html>
