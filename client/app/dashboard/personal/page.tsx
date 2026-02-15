@@ -1,15 +1,15 @@
 "use client";
 
 import useSWR from 'swr';
-import axios from 'axios';
 import Header from '../../../components/common/Header';
 import AccountOverview from '../../../components/dashboard/AccountOverview';
 import TransactionList from '../../../components/transactions/TransactionList';
 import TransferForm from '../../../components/transfers/TransferForm';
 import FinancialInsights from '../../../components/dashboard/FinancialInsights';
 import { useAuthGuard } from '../../../components/hooks/useAuthGuard';
+import { apiClient } from '../../../lib/api';
 
-const fetcher = (url) => axios.get(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(r => r.data);
+const fetcher = (url: string) => apiClient.get(url).then((r) => r.data);
 
 export default function PersonalDashboard() {
   useAuthGuard();
@@ -20,19 +20,14 @@ export default function PersonalDashboard() {
       <Header />
       <main className="container mx-auto p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Main Content: Left side */}
           <div className="lg:col-span-2 space-y-8">
             <AccountOverview transactions={transactions} />
             <TransactionList items={transactions} isLoading={isLoading} error={error ? 'Failed to load transactions' : null} />
           </div>
-
-          {/* Sidebar: Right side */}
           <div className="space-y-8">
             <TransferForm />
             <FinancialInsights />
           </div>
-
         </div>
       </main>
     </div>

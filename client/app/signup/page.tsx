@@ -1,84 +1,62 @@
 "use client";
 
 import { useState } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
-
+import { apiClient } from '../../lib/api';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [accountType, setAccountType] = useState<'personal'|'business'>('personal');
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    email: '',
+    fullName: '',
+    password: '',
+    confirmPassword: '',
+    accountType: 'personal'
+  });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    if (!fullName.trim()) return setError('Full name is required');
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError('Enter a valid email');
-    if (password.length < 8) return setError('Password must be at least 8 characters');
-    if (password !== confirmPassword) return setError('Passwords do not match');
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
 
+    setError(null);
     setLoading(true);
     try {
-      // normalize on client as well
-      const payload = { email: email.trim().toLowerCase(), password, fullName: fullName.trim(), accountType };
-      const { data } = await axios.post('/api/auth/register', payload);
-      localStorage.setItem('token', data.token);
+      const { data } = await apiClient.post('/api/auth/register', {
+        email: form.email,
+        fullName: form.fullName,
+        password: form.password,
+        accountType: form.accountType
+      });
       localStorage.setItem('user', JSON.stringify(data.user));
-      router.push(`/dashboard/${accountType}`);
+      router.push(`/dashboard/${form.accountType}`);
     } catch (err: any) {
-      console.error('Signup error', err?.response || err);
-      const serverError = err?.response?.data?.error;
-      if (serverError && typeof serverError === 'object') {
-        const code = serverError.code || 'SERVER_ERROR';
-        const details = serverError.details || JSON.stringify(serverError);
-        setError(`${code}: ${details}`);
-      } else {
-        const serverMessage = err?.response && err.response.data && (err.response.data.error || err.response.data.message);
-        const message = serverMessage || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-        setError(message || 'Signup failed');
-      }
+      const resp = err?.response?.data?.error;
+      setError(resp?.details || resp || 'Registration failed');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="auth-card">
-      <h1 className="text-2xl font-semibold mb-2">Create your Premierbank account</h1>
-      <p className="text-gray-600 mb-6">Quickly create an account to access your dashboard.</p>
-      <form onSubmit={e => e.preventDefault()} className="space-y-4">
-        <div>
-          <label className="block text-sm mb-1">Full name</label>
-          <input className="input" value={fullName} onChange={e => setFullName(e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Confirm Password</label>
-          <input className="input" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Account Type</label>
-          <select className="select" value={accountType} onChange={e => setAccountType(e.target.value as any)}>
-            <option value="personal">Personal</option>
-            <option value="business">Business</option>
-          </select>
-        </div>
-        {error && <div className="text-sm text-red-600">{error}</div>}
-        <button type="button" className="button w-full" disabled={loading} onClick={onSubmit}>{loading ? 'Creating account...' : 'Create account'}</button>
+    <main className="max-w-md mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Create account</h1>
+      <form className="space-y-3" onSubmit={onSubmit}>
+        <input className="input w-full" placeholder="Full name" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required />
+        <input className="input w-full" placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+        <input className="input w-full" placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+        <input className="input w-full" placeholder="Confirm Password" type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required />
+        <select className="select w-full" value={form.accountType} onChange={(e) => setForm({ ...form, accountType: e.target.value })}>
+          <option value="personal">Personal</option>
+          <option value="business">Business</option>
+        </select>
+        {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+        <button className="button w-full" type="submit" disabled={loading}>{loading ? 'Creating account...' : 'Create account'}</button>
       </form>
-    </div>
+    </main>
   );
 }
