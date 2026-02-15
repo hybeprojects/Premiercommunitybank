@@ -4,10 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowDown, ArrowUp, AlertCircle, Inbox } from 'lucide-react';
 import { clsx } from 'clsx';
-import { tailwindMerge } from 'tailwind-merge';
+import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs) {
-  return tailwindMerge(clsx(inputs));
+  return twMerge(clsx(inputs));
 }
 
 type Tx = {
@@ -129,7 +129,7 @@ export default function TransactionList({ items, isLoading, error }: { items?: T
                   <TransactionIcon direction={t.direction} />
                   <div>
                     <p className="font-semibold text-gray-800 dark:text-gray-100">{t.description || 'N/A'}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(t.date).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{new Date((t as any).created_at || t.date).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="text-right">

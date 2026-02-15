@@ -6,10 +6,10 @@ import { getSocket } from '../../lib/socket';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Eye, EyeOff, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { clsx } from 'clsx';
-import { tailwindMerge } from 'tailwind-merge';
+import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs) {
-  return tailwindMerge(clsx(inputs));
+  return twMerge(clsx(inputs));
 }
 
 function formatCurrency(v, isHidden) {
@@ -75,7 +75,7 @@ export default function AccountOverview({ transactions }) {
                 borderRadius: '8px',
                 color: '#333'
               }}
-              formatter={(value) => [`$${value.toFixed(2)}`, 'Balance']}
+              formatter={(value) => { const amount = Number(value); return [`$${amount.toFixed(2)}`, 'Balance']; }}
             />
             <Area type="monotone" dataKey="balance" stroke="#8884d8" fillOpacity={1} fill="url(#balanceGradient)" />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />

@@ -39,7 +39,7 @@ export default function FinancialInsights() {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+            <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
             <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" />
           </PieChart>
         </ResponsiveContainer>

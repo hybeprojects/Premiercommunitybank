@@ -1,12 +1,13 @@
 "use client";
 
-"use client";
-
 import { useEffect } from 'react';
+import { apiClient } from '../../lib/api';
 
 export function useAuthGuard() {
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (!token) window.location.href = '/';
+    apiClient.get('/api/auth/me').catch(() => {
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    });
   }, []);
 }
